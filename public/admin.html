@@ -946,7 +946,7 @@
   }
   function cardHTML(o) {
     const on = selected.has(o.id);
-    const phone = o.phone ? `<a href="tel:${esc(o.phone.replace(/[^\d+]/g, ""))}">${esc(o.phone)}</a>` : "—";
+    const phone = o.phone ? `<a href="tel:${esc(o.phone.replace(/[^\d+]/g,""))}">${esc(o.phone)}</a>` : "—";
     return `<article class="order-card glass">
       <div class="oc-top">
         <div>
@@ -1026,7 +1026,7 @@
     const o = orders.find(x => x.id === id);
     if (!o) { if (el.detail.open) el.detail.close(); return; }
     el.detail.dataset.id = id;
-    const phone = o.phone ? `<a href="tel:${esc(o.phone.replace(/[^\d+]/g, ""))}">${esc(o.phone)}</a>` : "—";
+    const phone = o.phone ? `<a href="tel:${esc(o.phone.replace(/[^\d+]/g,""))}">${esc(o.phone)}</a>` : "—";
     el.detailBody.innerHTML = `
       <div class="dlg-top"><div><h2 id="dTitle">Order #${o.id}</h2><span class="sub">Placed ${esc(fmtDateTime(o.placed))}</span></div>
         <span class="status-badge ${badgeClass(o.status)}">${esc(label(o.status))}</span></div>
