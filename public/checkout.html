@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checkout – The Florique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<meta name="theme-color" content="#fdf7f0">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<div class="site">
+<div class="frame" aria-hidden="true"><i class="f-l"></i><i class="f-r"></i><i class="f-tl"></i><i class="f-tc"></i><i class="f-tr"></i><i class="f-bl"></i><i class="f-bc"></i><i class="f-br"></i></div>
+<header class="site-header">
+  <a class="brand" href="index.html" aria-label="The Florique – home"><img src="img/logo.webp" alt="The Florique" width="700" height="337"></a>
+  <nav class="nav" id="mainNav" aria-label="Main">
+    <a href="index.html">Shop</a>
+    <a href="orders.html">My Orders</a>
+    <a href="login.html" data-signout>Sign out</a>
+  </nav>
+  <div class="header-actions">
+    <a class="cart-btn" id="cartLink" href="index.html" aria-label="View cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 12.4a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 7H6"/></svg><span class="cart-label">Cart</span><span class="cart-count" id="cartCount" aria-live="polite">0</span></a>
+    <button class="menu-btn" id="menuToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mainNav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</header>
+
+<main class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Checkout</h1>
+      <p class="page-sub">Tell us where and when to deliver your flowers.</p>
+    </div>
+    <a class="back-link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Back to shop</a>
+  </div>
+
+  <div class="checkout">
+    <section class="panel" aria-labelledby="deliveryTitle">
+      <h2 id="deliveryTitle">Delivery details</h2>
+      <form id="checkoutForm" novalidate>
+        <div class="field-row">
+          <div class="field">
+            <label for="name">Full name</label>
+            <input id="name" name="name" type="text" autocomplete="name" aria-describedby="err-name" required>
+            <span class="error" id="err-name"></span>
+          </div>
+          <div class="field">
+            <label for="phone">Phone number</label>
+            <input id="phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="10-digit mobile number" aria-describedby="err-phone" required>
+            <span class="error" id="err-phone"></span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="address">Delivery address <span class="opt">(Delhi NCR)</span></label>
+          <textarea id="address" name="address" placeholder="House / flat no., street, area, city, PIN code" aria-describedby="err-address" required></textarea>
+          <span class="error" id="err-address"></span>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="date">Delivery date</label>
+            <input id="date" name="date" type="date" aria-describedby="err-date" required>
+            <span class="error" id="err-date"></span>
+          </div>
+          <div class="field">
+            <label for="slot">Time slot</label>
+            <select id="slot" name="slot" aria-describedby="err-slot" required>
+              <option value="">Choose a time slot</option>
+              <option value="Morning 9AM-12PM">Morning (9 AM – 12 PM)</option>
+              <option value="Afternoon 12PM-4PM">Afternoon (12 PM – 4 PM)</option>
+              <option value="Evening 4PM-8PM">Evening (4 PM – 8 PM)</option>
+            </select>
+            <span class="error" id="err-slot"></span>
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:0">
+          <label for="notes">Order notes <span class="opt">(optional)</span></label>
+          <textarea id="notes" name="notes" placeholder="Gift message, landmark, delivery instructions…"></textarea>
+        </div>
+      </form>
+    </section>
+
+    <aside class="summary panel" aria-labelledby="summaryTitle">
+      <h2 id="summaryTitle">Order summary</h2>
+      <ul class="sum-items" id="sumItems"></ul>
+      <div class="sum-total"><span>Total</span><span id="sumTotal">₹0</span></div>
+      <button class="btn btn-primary btn-block" id="confirmBtn" type="submit" form="checkoutForm">Confirm Payment</button>
+      <p class="secure"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Secure payment with Razorpay</p>
+      <p class="status" id="status" role="status" hidden></p>
+    </aside>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+  <div class="footer-inner">
+    <div>
+      <a class="footer-brand" href="index.html" aria-label="The Florique – home"><img src="img/logo.webp" alt="The Florique" width="700" height="337"></a>
+      <p>Fresh flowers, delivered across Delhi NCR.</p>
+    </div>
+    <nav class="footer-links" aria-label="Footer">
+      <a href="index.html">Shop</a>
+      <a href="orders.html">My orders</a>
+      <a href="login.html">Login</a>
+      <a href="contact.html">Contact us</a>
+    </nav>
+  </div>
+  <div class="footer-base">
+    <nav class="legal-links" aria-label="Policies">
+      <a href="terms.html">Terms and conditions</a>
+      <a href="privacy.html">Privacy policy</a>
+      <a href="refund.html">Refund and cancellation</a>
+      <a href="shipping.html">Delivery policy</a>
+    </nav>
+    <span>© The Florique</span>
+  </div>
+  </div>
+</footer>
+
+</div>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="cart.js"></script>
+<script>
+  /* =====================================================================
+     ORDER OF EXECUTION (important):
+     1) Cart.ready → render order summary — runs first, no auth dependency.
+     2) Header cart badge + mobile menu — DOM-only.
+     3) Form validation wiring.
+     4) Form submit handler → initiatePayment().
+     5) checkAuth() — runs at the very bottom, AFTER the page is usable.
+     ===================================================================== */
+  
+  /* ---------- 1. Cart: load + render summary FIRST ---------- */
+  
+  const rupees = n => "₹" + Number(n).toLocaleString("en-IN");
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+  
+  // The cart comes from cart.js (server-side for logged-in users); filled in once it has loaded.
+  let cart  = [];
+  let total = 0;
+  
+  function renderSummary() {
+    const sumItems   = document.getElementById("sumItems");
+    const confirmBtn = document.getElementById("confirmBtn");
+    const sumTotal   = document.getElementById("sumTotal");
+    if (!sumItems || !confirmBtn || !sumTotal) return;
+  
+    if (cart.length === 0) {
+      sumItems.innerHTML =
+        `<li class="sum-empty">Your cart is empty. <a href="index.html">Choose a bouquet</a> to continue.</li>`;
+      confirmBtn.disabled = true;
+    } else {
+      sumItems.innerHTML = cart.map(i => `
+        <li class="sum-item">
+          <span class="name">${esc(i.name)}</span>
+          <span class="line">${rupees(i.qty * i.price)}</span>
+          <span class="meta">${i.qty} × ${rupees(i.price)}</span>
+        </li>`).join("");
+      confirmBtn.disabled = false;
+    }
+    sumTotal.textContent   = rupees(total);
+    confirmBtn.textContent = "Confirm Payment " + rupees(total);
+  }
+  
+  /* ---------- 2. Header cart badge + mobile menu ---------- */
+  
+  function renderCartBadge() {
+    const el = document.getElementById("cartCount");
+    if (el) el.textContent = cart.reduce((s, i) => s + i.qty, 0);
+  }
+  
+  Cart.ready.then(() => {
+    cart  = Cart.items();
+    total = cart.reduce((s, i) => s + i.qty * i.price, 0);
+    renderSummary();
+    renderCartBadge();
+  });
+  
+  // Sign out: end the server session, then drop anything cached in this browser
+  document.querySelectorAll("[data-signout]").forEach(a => a.addEventListener("click", async e => {
+    e.preventDefault();
+    try { await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }); } catch (err) {}
+    try { localStorage.removeItem("flowerShopUser"); } catch (err) {}
+    Cart.forget();
+    window.location.href = "login.html";
+  }));
+  
+  (function initMenu() {
+    const navEl   = document.getElementById("mainNav");
+    const menuBtn = document.getElementById("menuToggle");
+    if (!navEl || !menuBtn) return;
+    const setMenu = open => {
+      navEl.classList.toggle("open", open);
+      menuBtn.setAttribute("aria-expanded", String(open));
+    };
+    menuBtn.addEventListener("click", () => setMenu(!navEl.classList.contains("open")));
+    document.addEventListener("click", e => { if (!e.target.closest(".site-header")) setMenu(false); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
+  })();
+  
+  /* ---------- 3. Form validation ---------- */
+  
+  const form   = document.getElementById("checkoutForm");
+  const fields = ["name", "phone", "address", "date", "slot"];
+  const el     = id => document.getElementById(id);
+  
+  const now = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  el("date").min = today;
+  
+  el("phone").addEventListener("input", e => {
+    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
+  });
+  
+  function validate() {
+    const v = id => el(id).value.trim();
+    const errors = {};
+    if (v("name").length < 2)               errors.name    = "Enter your full name.";
+    if (!/^[6-9]\d{9}$/.test(v("phone")))   errors.phone   = "Enter a valid 10-digit Indian mobile number.";
+    if (v("address").length < 10)           errors.address = "Enter your full delivery address in Delhi NCR.";
+    if (!v("date"))                         errors.date    = "Choose a delivery date.";
+    else if (v("date") < today)             errors.date    = "Delivery date can’t be in the past.";
+    if (!v("slot"))                         errors.slot    = "Choose a delivery time slot.";
+    return errors;
+  }
+  
+  function showErrors(errors) {
+    fields.forEach(id => {
+      el("err-" + id).textContent = errors[id] || "";
+      el(id).setAttribute("aria-invalid", errors[id] ? "true" : "false");
+    });
+  }
+  
+  fields.forEach(id => {
+    const clear = () => {
+      el("err-" + id).textContent = "";
+      el(id).setAttribute("aria-invalid", "false");
+    };
+    el(id).addEventListener("input",  clear);
+    el(id).addEventListener("change", clear);
+  });
+  
+  /* ---------- 4. Payment + submit ---------- */
+  
+  async function initiatePayment(orderData) {
+    try {
+      const res = await fetch("/api/payment/create-order", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount:   orderData.total,
+          currency: "INR",
+          receipt:  "receipt_" + Date.now(),
+          name:     orderData.customer.name,
+          phone:    orderData.customer.phone,
+          address:  orderData.delivery.address,
+          date:     orderData.delivery.date,
+          slot:     orderData.delivery.timeSlot,
+          notes:    orderData.delivery.notes,
+          items:    orderData.items
+        })
+      });
+  
+      if (!res.ok) throw new Error("Failed to create order");
+      const order = await res.json();
+  
+      const options = {
+        key:         order.key_id,
+        amount:      order.amount,
+        currency:    order.currency,
+        name:        "The Florique",
+        description: "Flower delivery",
+        order_id:    order.id,
+        prefill: {
+          name:    orderData.customer.name,
+          contact: orderData.customer.phone
+        },
+        theme: { color: "#d9456f" },
+        handler: async function (response) {
+          const verifyRes = await fetch("/api/payment/verify-signature", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_order_id:   response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature:  response.razorpay_signature
+            })
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyData.success) {
+            // ⚠️ success.html is the ONLY place that may clear the cart.
+            window.location.href = "success.html?order_id=" + response.razorpay_order_id;
+          } else {
+            alert("Payment verification failed. Please contact support.");
+          }
+        },
+        modal: { ondismiss: () => console.log("Payment popup closed by user") }
+      };
+  
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error("Payment error:", err);
+      alert("Something went wrong. Please try again.");
+    }
+  }
+  
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    if (cart.length === 0) return;
+  
+    const errors = validate();
+    showErrors(errors);
+    const firstBad = fields.find(id => errors[id]);
+    if (firstBad) { el(firstBad).focus(); return; }
+  
+    const orderData = {
+      customer: {
+        name:  el("name").value.trim(),
+        phone: el("phone").value.trim()
+      },
+      delivery: {
+        address:  el("address").value.trim(),
+        date:     el("date").value,
+        timeSlot: el("slot").value,
+        notes:    el("notes").value.trim()
+      },
+      items:    cart.map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty })),
+      total,
+      currency: "INR",
+      createdAt: new Date().toISOString()
+    };
+  
+    await initiatePayment(orderData);
+  });
+  
+  /* ---------- 5. Auth check — runs LAST, after everything above ---------- */
+  
+  async function checkAuth() {
+    // If the page loads unauthenticated, we simply redirect.
+    // We DO NOT touch localStorage here — the cart stays intact so that
+    // after login the user lands back on a still-populated checkout page.
+    try {
+      const res = await fetch("/api/auth/me", {
+        credentials: "same-origin",
+        cache: "no-store"
+      });
+      if (res.status === 401) {
+        // Preserve the intended destination so login.html can bounce back.
+        window.location.replace("login.html?next=checkout.html");
+      }
+      // 200 / anything else → stay on checkout.
+    } catch (err) {
+      // Network hiccup: do NOT redirect. Better to let the user retry
+      // than to drop them on login and risk losing the cart on the way back.
+      console.error("Auth check failed (non-fatal):", err);
+    }
+  }
+  
+  // Kick off auth check at the very bottom, once DOM + cart UI are ready.
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", checkAuth);
+  } else {
+    checkAuth();
+  }
+  </script>
+<script>(function(){var h=document.querySelector(".site-header");if(!h)return;function f(){h.classList.toggle("scrolled",window.scrollY>24)}addEventListener("scroll",f,{passive:true});f()})();</script>
+</body>
+</html>

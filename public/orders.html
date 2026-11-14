@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Orders – The Florique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<meta name="theme-color" content="#fdf7f0">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<div class="site">
+<div class="frame" aria-hidden="true"><i class="f-l"></i><i class="f-r"></i><i class="f-tl"></i><i class="f-tc"></i><i class="f-tr"></i><i class="f-bl"></i><i class="f-bc"></i><i class="f-br"></i></div>
+<header class="site-header">
+  <a class="brand" href="index.html" aria-label="The Florique – home"><img src="img/logo.webp" alt="The Florique" width="700" height="337"></a>
+  <nav class="nav" id="mainNav" aria-label="Main">
+    <a href="index.html">Shop</a>
+    <a href="orders.html" aria-current="page">My Orders</a>
+    <a href="login.html" data-signout>Sign out</a>
+  </nav>
+  <div class="header-actions">
+    <a class="cart-btn" id="cartLink" href="index.html" aria-label="View cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 12.4a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 7H6"/></svg><span class="cart-label">Cart</span><span class="cart-count" id="cartCount" aria-live="polite">0</span></a>
+    <button class="menu-btn" id="menuToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mainNav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  </div>
+</header>
+
+<main class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">My orders</h1>
+      <p class="page-sub">Your recent bouquet orders and where they stand.</p>
+    </div>
+    <a class="back-link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Back to shop</a>
+  </div>
+  <section class="orders" id="orders" aria-label="Order history"></section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+  <div class="footer-inner">
+    <div>
+      <a class="footer-brand" href="index.html" aria-label="The Florique – home"><img src="img/logo.webp" alt="The Florique" width="700" height="337"></a>
+      <p>Fresh flowers, delivered across Delhi NCR.</p>
+    </div>
+    <nav class="footer-links" aria-label="Footer">
+      <a href="index.html">Shop</a>
+      <a href="orders.html">My orders</a>
+      <a href="login.html">Login</a>
+      <a href="contact.html">Contact us</a>
+    </nav>
+  </div>
+  <div class="footer-base">
+    <nav class="legal-links" aria-label="Policies">
+      <a href="terms.html">Terms and conditions</a>
+      <a href="privacy.html">Privacy policy</a>
+      <a href="refund.html">Refund and cancellation</a>
+      <a href="shipping.html">Delivery policy</a>
+    </nav>
+    <span>© The Florique</span>
+  </div>
+  </div>
+</footer>
+
+</div>
+<script src="cart.js"></script>
+<script>
+
+  const rupees = n => "₹" + Number(n).toLocaleString("en-IN");
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // cart count in the header
+  (function () {
+    const el = document.getElementById("cartCount");
+    if (el) Cart.ready.then(() => { el.textContent = Cart.count(); });
+  })();
+
+  // orders.html wires its own logout below; here just drop browser-cached cart data
+  document.querySelectorAll("[data-signout]").forEach(a => a.addEventListener("click", () => {
+    try { localStorage.removeItem("flowerShopUser"); } catch (e) {}
+    Cart.forget();
+  }));
+
+  // header menu on small screens
+  (function () {
+    const navEl = document.getElementById("mainNav");
+    const menuBtn = document.getElementById("menuToggle");
+    if (!navEl || !menuBtn) return;
+    const setMenu = open => { navEl.classList.toggle("open", open); menuBtn.setAttribute("aria-expanded", String(open)); };
+    menuBtn.addEventListener("click", () => setMenu(!navEl.classList.contains("open")));
+    document.addEventListener("click", e => { if (!e.target.closest(".site-header")) setMenu(false); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
+  })();
+
+  // Order status -> badge text, colour and progress step
+  const STATUS = {
+    pending:          { label: "Awaiting payment", cls: "pending",   step: 0 },
+    paid:             { label: "Order confirmed",  cls: "paid",      step: 1 },
+    out_for_delivery: { label: "Out for delivery", cls: "out",       step: 2 },
+    delivered:        { label: "Delivered",        cls: "delivered", step: 3 },
+    cancelled:        { label: "Cancelled",        cls: "cancelled", step: 0 },
+    failed:           { label: "Payment failed",   cls: "cancelled", step: 0 }
+  };
+  const STEPS = ["Confirmed", "Out for delivery", "Delivered"];
+  function statusKey(s) {
+    s = String(s || "pending").toLowerCase().replace(/[\s-]+/g, "_");
+    if (s === "out") s = "out_for_delivery";
+    if (s === "canceled") s = "cancelled";
+    return STATUS[s] ? s : "pending";
+  }
+
+  // SQLite stores "YYYY-MM-DD HH:MM:SS" in UTC — mark it as UTC so it shows in local time.
+  function formatDate(value) {
+    if (!value) return "—";
+    const iso = String(value).includes("T") ? value : String(value).replace(" ", "T") + "Z";
+    const d = new Date(iso);
+    if (isNaN(d)) return String(value);
+    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  }
+  // Delivery dates are date-only values: keep them on the same calendar day.
+  function formatDay(value) {
+    if (!value) return "";
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value));
+    const d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(value);
+    return isNaN(d) ? String(value) : d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  }
+
+  // Safely parse items_json into an array of { name, qty, price }.
+  function parseItems(itemsJson) {
+    try {
+      const arr = JSON.parse(itemsJson);
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  const list = document.getElementById("orders");
+
+  function renderEmpty() {
+    list.innerHTML = `
+      <div class="panel orders-empty">
+        <h2>No orders yet</h2>
+        <p>When you place an order, you’ll be able to follow it here.</p>
+        <a class="btn btn-primary" href="index.html">Browse bouquets</a>
+      </div>`;
+  }
+
+  function renderOrders(orders) {
+    if (!Array.isArray(orders) || orders.length === 0) { renderEmpty(); return; }
+
+    list.innerHTML = orders.map(o => {
+      const key = statusKey(o.status);
+      const st = STATUS[key];
+      const items = parseItems(o.items_json);
+      const total = (Number(o.total) || 0) / 100;
+
+      const itemsHtml = items.length
+        ? items.map(i => `
+            <li>
+              <span>${esc(i.name)}</span>
+              <span class="qty">Qty ${esc(i.qty)} · ${rupees((Number(i.price) || 0) * (Number(i.qty) || 0))}</span>
+            </li>`).join("")
+        : `<li><span>No items on record</span><span class="qty">—</span></li>`;
+
+      let progress = "";
+      if (st.step > 0) {
+        progress = `<ol class="track" aria-label="Order progress">` +
+          STEPS.map((label, idx) => `<li class="${st.step > idx ? "is-done" : ""}"${st.step === idx + 1 ? ' aria-current="step"' : ""}>${label}</li>`).join("") + `</ol>`;
+      } else if (key === "pending") {
+        progress = `<p class="order-note">Payment hasn’t been completed for this order.</p>`;
+      } else {
+        progress = `<p class="order-note">This order was not completed.</p>`;
+      }
+
+      const info = [];
+      if (o.delivery_date) info.push(["Delivery date", formatDay(o.delivery_date)]);
+      if (o.time_slot) info.push(["Time slot", o.time_slot]);
+      if (o.address) info.push(["Delivering to", o.address]);
+      const infoHtml = info.length
+        ? `<dl class="order-info">${info.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>`
+        : "";
+
+      return `
+        <article class="order panel">
+          <div class="order-top">
+            <div>
+              <h2 class="order-id">Order #${esc(o.id)}</h2>
+              <span class="order-date">Placed on ${esc(formatDate(o.created_at))}</span>
+            </div>
+            <span class="badge ${st.cls}">${st.label}</span>
+          </div>
+          ${progress}
+          ${infoHtml}
+          <ul class="order-items">${itemsHtml}</ul>
+          <div class="order-foot"><span>Total</span><span class="amt">${rupees(total)}</span></div>
+        </article>`;
+    }).join("");
+  }
+
+  async function fetchOrders() {
+    try {
+      const res = await fetch("/api/orders", { headers: { Accept: "application/json" } });
+      if (res.status === 401) {
+        list.innerHTML = `
+          <div class="panel orders-empty">
+            <h2>Sign in to see your orders</h2>
+            <p>Your order history is saved to your account.</p>
+            <a class="btn btn-primary" href="login.html">Login</a>
+          </div>`;
+        return;
+      }
+      if (!res.ok) throw new Error("Failed to load orders (" + res.status + ")");
+      const data = await res.json();
+      renderOrders(data);
+    } catch (err) {
+      console.error("fetchOrders error:", err);
+      list.innerHTML = `
+        <div class="panel orders-empty">
+          <h2>We couldn’t load your orders</h2>
+          <p>Please try again in a moment.</p>
+        </div>`;
+    }
+  }
+
+  fetchOrders();
+    // ---------- Auth state: greeting + header links + logout ----------
+    (function initAuth() {
+    const signoutLink = document.querySelector("a[data-signout]");
+    const accountLink = document.querySelector('a[href="account.html"]');
+
+    // Replace the icon + text of the sign-out link, preserving its SVG icon
+    function setLinkLabel(link, label) {
+      // Remove existing text nodes (keep the SVG icon)
+      [...link.childNodes].forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) node.remove();
+      });
+      link.appendChild(document.createTextNode(" " + label));
+    }
+
+    function applyGuestState() {
+      if (signoutLink) {
+        setLinkLabel(signoutLink, "Sign in");
+        signoutLink.setAttribute("href", "login.html");
+        // Remove any previously attached logout handler so it doesn't fire
+        signoutLink.onclick = null;
+      }
+      if (accountLink) accountLink.style.display = "none";
+    }
+
+    function applyLoggedInState(name) {
+      if (signoutLink) {
+        setLinkLabel(signoutLink, `Sign out (${name})`);
+        signoutLink.setAttribute("href", "#");
+        signoutLink.onclick = async (e) => {
+          e.preventDefault();
+          try {
+            await fetch("/api/auth/logout", { method: "POST" });
+          } catch (err) {
+            console.error("Logout request failed:", err);
+          }
+          window.location.href = "index.html";
+        };
+      }
+      if (accountLink) accountLink.style.display = "";
+    }
+
+    fetch("/api/auth/me")
+      .then(res => {
+        if (res.status === 401) return null;
+        if (!res.ok) throw new Error("Unexpected status: " + res.status);
+        return res.json();
+      })
+      .then(data => {
+        if (data && data.user && data.user.name) {
+          applyLoggedInState(data.user.name);
+        } else {
+          applyGuestState();
+        }
+      })
+      .catch(err => {
+        console.error("Failed to fetch /api/auth/me:", err);
+        applyGuestState();
+      });
+  })();
+</script>
+<script>(function(){var h=document.querySelector(".site-header");if(!h)return;function f(){h.classList.toggle("scrolled",window.scrollY>24)}addEventListener("scroll",f,{passive:true});f()})();</script>
+</body>
+</html>
