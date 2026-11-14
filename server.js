@@ -148,6 +148,18 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
+  CREATE TABLE IF NOT EXISTS reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    rating INTEGER NOT NULL,
+    title TEXT,
+    body TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'published',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS carts (
     user_id INTEGER PRIMARY KEY,
     items_json TEXT NOT NULL DEFAULT '[]',
@@ -558,6 +570,150 @@ app.get('/api/orders', (req, res) => {
   } catch (err) {
     console.error('Error fetching orders:', err);
     return res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
+
+
+// ---------------------------------------------------------------------------
+// Customer reviews
+//  - Only logged-in customers with a paid order can review ("verified buyer").
+//  - One review per customer; posting again replaces it.
+//  - Reviews are published straight away; the admin can hide or delete them.
+// ---------------------------------------------------------------------------
+const reviewLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Too many review attempts. Please try again later.' },
+});
+
+// "Mani Kumar" -> "Mani K."  (we never show a full name or email)
+function publicName(full) {
+  const parts = String(full || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return 'Customer';
+  const first = parts[0].slice(0, 24);
+  return parts.length > 1 ? first + ' ' + parts[parts.length - 1][0].toUpperCase() + '.' : first;
+}
+
+function cleanText(v, max) {
+  return String(v == null ? '' : v)
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+    .slice(0, max);
+}
+
+const hasPaidOrder = db.prepare(
+  `SELECT 1 FROM orders WHERE user_id = ? AND status IN ('paid','out_for_delivery','delivered') LIMIT 1`
+);
+
+app.get('/api/reviews', (req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store');
+    const rows = db
+      .prepare(`SELECT id, name, rating, title, body, created_at FROM reviews WHERE status = 'published' ORDER BY datetime(created_at) DESC, id DESC LIMIT 60`)
+      .all();
+    const agg = db
+      .prepare(`SELECT rating, COUNT(*) AS n FROM reviews WHERE status = 'published' GROUP BY rating`)
+      .all();
+    const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    let total = 0, sum = 0;
+    agg.forEach((r) => { counts[r.rating] = r.n; total += r.n; sum += r.n * r.rating; });
+    const out = {
+      success: true,
+      summary: { count: total, average: total ? Math.round((sum / total) * 10) / 10 : 0, counts },
+      reviews: rows,
+      me: null,
+    };
+    const uid = req.session.user && req.session.user.id;
+    if (uid) {
+      const mine = db.prepare(`SELECT rating, title, body, status FROM reviews WHERE user_id = ?`).get(uid);
+      out.me = { canReview: !!hasPaidOrder.get(uid), review: mine || null };
+    }
+    return res.json(out);
+  } catch (err) {
+    console.error('Error loading reviews:', err);
+    return res.status(500).json({ success: false, error: 'Failed to load reviews' });
+  }
+});
+
+app.post('/api/reviews', reviewLimiter, requireLogin, (req, res) => {
+  try {
+    const uid = req.session.user.id;
+    if (!hasPaidOrder.get(uid)) {
+      return res.status(403).json({ success: false, error: 'Reviews are open to customers who have placed an order.' });
+    }
+    const rating = Number(req.body && req.body.rating);
+    const title = cleanText(req.body && req.body.title, 80);
+    const body = cleanText(req.body && req.body.body, 600);
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, error: 'Please choose a star rating from 1 to 5.' });
+    }
+    if (body.length < 10) {
+      return res.status(400).json({ success: false, error: 'Please write at least 10 characters about your order.' });
+    }
+    const user = selectUserById.get(uid);
+    const name = publicName(user && user.name);
+    db.prepare(
+      `INSERT INTO reviews (user_id, name, rating, title, body) VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(user_id) DO UPDATE SET name = excluded.name, rating = excluded.rating, title = excluded.title,
+         body = excluded.body, status = CASE WHEN reviews.status = 'hidden' THEN 'hidden' ELSE 'published' END,
+         updated_at = CURRENT_TIMESTAMP`
+    ).run(uid, name, rating, title, body);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Error saving review:', err);
+    return res.status(500).json({ success: false, error: 'Could not save your review' });
+  }
+});
+
+app.delete('/api/reviews/mine', reviewLimiter, requireLogin, (req, res) => {
+  try {
+    db.prepare('DELETE FROM reviews WHERE user_id = ?').run(req.session.user.id);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Error deleting review:', err);
+    return res.status(500).json({ success: false, error: 'Could not delete your review' });
+  }
+});
+
+// Admin: every review, including hidden ones
+app.get('/api/admin/reviews', adminLimiter, requireAdminPin, (req, res) => {
+  try {
+    return res.json(db.prepare(`SELECT id, name, rating, title, body, status, created_at FROM reviews ORDER BY datetime(created_at) DESC, id DESC`).all());
+  } catch (err) {
+    console.error('Error fetching admin reviews:', err);
+    return res.status(500).json({ error: 'Failed to fetch reviews' });
+  }
+});
+
+app.post('/api/admin/reviews/:id/status', adminLimiter, requireAdminPin, (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const status = req.body && req.body.status;
+    if (!Number.isInteger(id) || id < 1) return res.status(400).json({ success: false, error: 'Invalid review id' });
+    if (!['published', 'hidden'].includes(status)) return res.status(400).json({ success: false, error: 'Invalid status' });
+    const r = db.prepare('UPDATE reviews SET status = ? WHERE id = ?').run(status, id);
+    if (r.changes === 0) return res.status(404).json({ success: false, error: 'Review not found' });
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Error updating review:', err);
+    return res.status(500).json({ success: false, error: 'Failed to update review' });
+  }
+});
+
+app.delete('/api/admin/reviews/:id', adminLimiter, requireAdminPin, (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) return res.status(400).json({ success: false, error: 'Invalid review id' });
+    const r = db.prepare('DELETE FROM reviews WHERE id = ?').run(id);
+    if (r.changes === 0) return res.status(404).json({ success: false, error: 'Review not found' });
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Error deleting review:', err);
+    return res.status(500).json({ success: false, error: 'Failed to delete review' });
   }
 });
 

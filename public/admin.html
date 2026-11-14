@@ -567,6 +567,17 @@
   .tb-field input, .tb-field select { height: 42px; }
   .stat-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
   @media (max-width: 520px) { .stat { padding: 14px; } .stat strong { font-size: 1.5rem; } }
+
+  .rva-list { display: grid; gap: 12px; }
+  .rva-row { display: grid; gap: 6px; padding: 14px 16px; border-radius: 16px; background: rgba(255,255,255,.55); border: 1px solid rgba(23,56,42,.12); }
+  .rva-row.is-hidden { opacity: .6; }
+  .rva-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+  .rva-stars { color: #c99a3f; letter-spacing: 2px; font-size: 1.05rem; }
+  .rva-name { font-weight: 800; }
+  .rva-tag { padding: 2px 10px; border-radius: 999px; font-size: .75rem; font-weight: 800; background: rgba(47,107,77,.14); color: var(--leaf-dark); }
+  .rva-tag.hidden { background: rgba(176,47,87,.14); color: #9c2749; }
+  .rva-body { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+  .rva-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -698,6 +709,11 @@
     <section class="admin-grid" id="orders" aria-label="Orders" hidden></section>
 
     <nav class="glass pager" id="pager" aria-label="Pagination" hidden></nav>
+
+    <section class="glass panel" id="reviewsPanel" aria-labelledby="rvPanelTitle" style="margin-top:24px">
+      <h2 id="rvPanelTitle">Customer reviews <span class="sub" id="rvPanelCount"></span></h2>
+      <div id="rvAdminList" class="rva-list"><p class="sub">Loading reviews…</p></div>
+    </section>
   </div>
 </main>
 
@@ -847,6 +863,7 @@
       el.updated.textContent = "Updated " + new Date().toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
       refreshSlotOptions();
       render();
+      loadReviews();
       if (el.detail.open) renderDetail(Number(el.detail.dataset.id));
     } catch (err) {
       if (err instanceof Locked) return;
@@ -858,6 +875,42 @@
       el.refresh.disabled = false; el.refresh.classList.remove("spin");
     }
   }
+
+  // ---------- Customer reviews ----------
+  async function loadReviews() {
+    const box = $("rvAdminList");
+    try {
+      const rows = await adminFetch("/api/admin/reviews");
+      $("rvPanelCount").textContent = rows.length ? "(" + rows.length + ")" : "";
+      box.innerHTML = rows.length ? rows.map(r => `
+        <article class="rva-row ${r.status === "hidden" ? "is-hidden" : ""}">
+          <div class="rva-top"><span class="rva-stars" aria-label="${r.rating} out of 5">${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}</span>
+            <span class="rva-name">${esc(r.name)}</span><span class="sub">${esc(String(r.created_at).slice(0, 10))}</span>
+            <span class="rva-tag ${r.status === "hidden" ? "hidden" : ""}">${r.status === "hidden" ? "Hidden" : "Published"}</span></div>
+          ${r.title ? `<strong>${esc(r.title)}</strong>` : ""}
+          <p class="rva-body">${esc(r.body)}</p>
+          <div class="rva-actions">
+            <button class="btn btn-sm btn-ghost" type="button" data-rv="${r.status === "hidden" ? "published" : "hidden"}" data-id="${r.id}">${r.status === "hidden" ? "Show on site" : "Hide from site"}</button>
+            <button class="btn btn-sm btn-outline-danger" type="button" data-rv="delete" data-id="${r.id}">Delete</button>
+          </div>
+        </article>`).join("") : `<p class="sub">No reviews yet. Customers with an order can post one from the home page.</p>`;
+    } catch (err) { if (!(err instanceof Locked)) box.innerHTML = `<p class="sub">Couldn’t load reviews.</p>`; }
+  }
+  $("rvAdminList").addEventListener("click", async e => {
+    const b = e.target.closest("button[data-rv]"); if (!b) return;
+    const id = b.dataset.id, act = b.dataset.rv;
+    try {
+      if (act === "delete") {
+        if (!confirm("Delete this review permanently?")) return;
+        await adminFetch("/api/admin/reviews/" + id, { method: "DELETE" });
+        toast("Review deleted.");
+      } else {
+        await adminFetch("/api/admin/reviews/" + id + "/status", { method: "POST", body: JSON.stringify({ status: act }) });
+        toast(act === "hidden" ? "Review hidden from the site." : "Review is live again.");
+      }
+      loadReviews();
+    } catch (err) { if (!(err instanceof Locked)) toast(err.message || "Couldn’t update the review.", "error"); }
+  });
 
   // ---------- Filtering / sorting ----------
   function matchesDelivery(o) {

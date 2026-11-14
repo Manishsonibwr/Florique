@@ -99,6 +99,24 @@
     </div>
     <div class="grid" id="productGrid"></div>
   </section>
+
+  <section class="section reviews" id="reviews" aria-labelledby="reviewsTitle">
+    <div class="section-head rv-head">
+      <div>
+        <h2 id="reviewsTitle">What our customers say</h2>
+        <p>Honest reviews from people who have ordered from The Florique.</p>
+      </div>
+      <button class="btn btn-primary" type="button" id="rvWrite">Write a review</button>
+    </div>
+    <p class="rv-note" id="rvNote" role="status" hidden></p>
+    <div class="rv-layout" id="rvLayout">
+      <aside class="rv-summary" id="rvSummary" aria-label="Rating summary"></aside>
+      <div>
+        <div class="rv-grid" id="rvList"></div>
+        <button class="rv-more" type="button" id="rvMore" hidden>Show more reviews</button>
+      </div>
+    </div>
+  </section>
 </main>
 
 <dialog class="pdlg" id="pdlg" aria-labelledby="pdName">
@@ -117,6 +135,34 @@
       <button class="btn btn-primary pdlg-add" type="button" id="pdAdd">Add to cart</button>
     </div>
   </div>
+</dialog>
+
+<dialog class="rvdlg" id="rvdlg" aria-labelledby="rvdTitle">
+  <form id="rvForm" novalidate>
+    <h2 id="rvdTitle">Write a review</h2>
+    <p class="rvd-sub">Tell other customers about your bouquet and delivery.</p>
+    <fieldset class="rvd-stars">
+      <legend>Your rating</legend>
+      <div class="rvd-starrow" id="rvdStars">
+        <input type="radio" name="rating" id="st5" value="5"><label for="st5" title="5 stars"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.3 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/></svg><span class="sr">5 stars</span></label>
+        <input type="radio" name="rating" id="st4" value="4"><label for="st4" title="4 stars"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.3 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/></svg><span class="sr">4 stars</span></label>
+        <input type="radio" name="rating" id="st3" value="3"><label for="st3" title="3 stars"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.3 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/></svg><span class="sr">3 stars</span></label>
+        <input type="radio" name="rating" id="st2" value="2"><label for="st2" title="2 stars"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.3 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/></svg><span class="sr">2 stars</span></label>
+        <input type="radio" name="rating" id="st1" value="1"><label for="st1" title="1 star"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.3 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z"/></svg><span class="sr">1 star</span></label>
+      </div>
+    </fieldset>
+    <label class="rvd-field" for="rvTitleIn">Headline <span>(optional)</span></label>
+    <input id="rvTitleIn" name="title" maxlength="80" autocomplete="off" placeholder="Fresh and beautifully wrapped">
+    <label class="rvd-field" for="rvBodyIn">Your review</label>
+    <textarea id="rvBodyIn" name="body" rows="5" maxlength="600" placeholder="How were the flowers, packaging and delivery?"></textarea>
+    <div class="rvd-count"><span id="rvCount">0</span>/600</div>
+    <p class="rvd-error" id="rvError" role="alert"></p>
+    <div class="rvd-actions">
+      <button class="btn btn-primary" type="submit" id="rvSubmit">Post review</button>
+      <button class="rvd-cancel" type="button" id="rvCancel">Cancel</button>
+      <button class="rvd-delete" type="button" id="rvDelete" hidden>Delete my review</button>
+    </div>
+  </form>
 </dialog>
 
 <div class="overlay" id="overlay"></div>
@@ -380,6 +426,105 @@
   });
   document.getElementById("pdClose").addEventListener("click", () => pdlg.close());
   pdlg.addEventListener("click", e => { if (e.target === pdlg) pdlg.close(); });   // click on the dim backdrop
+
+  // ---------- Customer reviews ----------
+  const STAR = "M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.3 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z";
+  const stars = r => `<span class="stars" role="img" aria-label="${r} out of 5 stars">${[1,2,3,4,5].map(i =>
+    `<svg viewBox="0 0 24 24" class="${i <= Math.round(r) ? "on" : ""}" aria-hidden="true"><path d="${STAR}"/></svg>`).join("")}</span>`;
+  const rvDate = d => { const t = new Date(String(d).replace(" ", "T") + "Z"); return isNaN(t) ? "" : t.toLocaleDateString("en-IN", { month: "long", year: "numeric" }); };
+  const rvEl = { list: document.getElementById("rvList"), summary: document.getElementById("rvSummary"), more: document.getElementById("rvMore"),
+    note: document.getElementById("rvNote"), write: document.getElementById("rvWrite"), dlg: document.getElementById("rvdlg"),
+    form: document.getElementById("rvForm"), err: document.getElementById("rvError"), count: document.getElementById("rvCount"),
+    submit: document.getElementById("rvSubmit"), del: document.getElementById("rvDelete"), layout: document.getElementById("rvLayout") };
+  let rvData = null, rvShown = 6;
+
+  function renderReviews() {
+    const d = rvData, sum = d.summary;
+    if (!sum.count) {
+      rvEl.layout.classList.add("empty");
+      rvEl.summary.innerHTML = `<div class="rv-empty"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${STAR}"/></svg>
+        <h3>No reviews yet</h3><p>Ordered from us? Be the first to share how your flowers arrived.</p></div>`;
+      rvEl.list.innerHTML = ""; rvEl.more.hidden = true;
+    } else {
+      rvEl.layout.classList.remove("empty");
+      const bars = [5, 4, 3, 2, 1].map(n => {
+        const c = sum.counts[n] || 0, pct = Math.round(c / sum.count * 100);
+        return `<div class="rv-bar"><span>${n}</span><i><b style="width:${pct}%"></b></i><span class="n">${c}</span></div>`;
+      }).join("");
+      rvEl.summary.innerHTML = `<div class="rv-avg">${sum.average.toFixed(1)}</div>${stars(sum.average)}
+        <p class="rv-based">Based on ${sum.count} review${sum.count === 1 ? "" : "s"}</p><div class="rv-bars">${bars}</div>`;
+      rvEl.list.innerHTML = d.reviews.slice(0, rvShown).map(r => `
+        <article class="rv-card">
+          <div class="rv-top">${stars(r.rating)}<span class="rv-date">${esc(rvDate(r.created_at))}</span></div>
+          ${r.title ? `<h3>${esc(r.title)}</h3>` : ""}
+          <p class="rv-body">${esc(r.body)}</p>
+          <footer><span class="rv-name">${esc(r.name)}</span>
+            <span class="rv-verified"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Verified buyer</span></footer>
+        </article>`).join("");
+      rvEl.more.hidden = d.reviews.length <= rvShown;
+    }
+    // button + note, depending on who is looking
+    const me = d.me;
+    rvEl.note.hidden = true;
+    rvEl.write.textContent = me && me.review ? "Edit your review" : "Write a review";
+  }
+
+  async function loadReviews() {
+    try {
+      const res = await fetch("/api/reviews", { cache: "no-store" });
+      if (!res.ok) throw new Error();
+      rvData = await res.json();
+      renderReviews();
+    } catch (e) {
+      rvEl.summary.innerHTML = `<div class="rv-empty"><h3>Reviews are unavailable</h3><p>Please try again in a little while.</p></div>`;
+      rvEl.layout.classList.add("empty");
+    }
+  }
+
+  function rvMessage(msg) { rvEl.note.textContent = msg; rvEl.note.hidden = false; }
+  rvEl.more.addEventListener("click", () => { rvShown += 6; renderReviews(); });
+
+  rvEl.write.addEventListener("click", () => {
+    if (!rvData) return;
+    const me = rvData.me;
+    if (!me) { window.location.href = "login?next=index"; return; }
+    if (!me.canReview) { rvMessage("Reviews are open to customers who have placed an order with us. Once your order is confirmed you can share your thoughts here."); return; }
+    rvEl.form.reset(); rvEl.err.textContent = "";
+    const r = me.review;
+    if (r) {
+      const radio = rvEl.form.querySelector(`input[name=rating][value="${r.rating}"]`); if (radio) radio.checked = true;
+      rvEl.form.title.value = r.title || ""; rvEl.form.body.value = r.body || "";
+    }
+    rvEl.del.hidden = !r;
+    document.getElementById("rvdTitle").textContent = r ? "Edit your review" : "Write a review";
+    rvEl.count.textContent = rvEl.form.body.value.length;
+    rvEl.dlg.showModal();
+  });
+  rvEl.form.body.addEventListener("input", () => { rvEl.count.textContent = rvEl.form.body.value.length; });
+  document.getElementById("rvCancel").addEventListener("click", () => rvEl.dlg.close());
+  rvEl.dlg.addEventListener("click", e => { if (e.target === rvEl.dlg) rvEl.dlg.close(); });
+
+  rvEl.form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const rating = Number((rvEl.form.querySelector("input[name=rating]:checked") || {}).value || 0);
+    const title = rvEl.form.title.value.trim(), body = rvEl.form.body.value.trim();
+    if (!rating) { rvEl.err.textContent = "Please choose a star rating."; return; }
+    if (body.length < 10) { rvEl.err.textContent = "Please write at least 10 characters."; return; }
+    rvEl.submit.disabled = true; rvEl.err.textContent = "";
+    try {
+      const res = await fetch("/api/reviews", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ rating, title, body }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Could not save your review.");
+      rvEl.dlg.close(); await loadReviews();
+      rvMessage("Thank you! Your review is now live."); document.getElementById("reviews").scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (err) { rvEl.err.textContent = err.message; }
+    finally { rvEl.submit.disabled = false; }
+  });
+  rvEl.del.addEventListener("click", async () => {
+    if (!confirm("Delete your review?")) return;
+    try { await fetch("/api/reviews/mine", { method: "DELETE" }); rvEl.dlg.close(); await loadReviews(); } catch (e) { rvEl.err.textContent = "Could not delete your review."; }
+  });
+  loadReviews();
 
   // ---------- Cart logic ----------
   function addToCart(id) {
