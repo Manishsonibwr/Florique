@@ -11,8 +11,36 @@
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <meta name="theme-color" content="#fdf7f0">
 <link rel="stylesheet" href="site.css">
+<script>try{if(sessionStorage.getItem("florique-splash")){document.documentElement.classList.add("splash-seen")}else{document.documentElement.classList.add("splash-on")}}catch(e){}</script>
+<noscript><style>.splash{display:none}</style></noscript>
 </head>
 <body>
+<div class="splash" id="splash" role="img" aria-label="The Florique – fresh blooms, hand-arranged and delivered to your doorstep">
+  <picture>
+    <source media="(orientation: portrait)" srcset="img/loader-m.webp">
+    <img class="splash-bg" src="img/loader-m.webp" alt="" aria-hidden="true">
+  </picture>
+  <picture>
+    <source media="(orientation: portrait)" srcset="img/loader-m.webp">
+    <img class="splash-img" id="splashImg" src="img/loader.webp" alt="" width="1920" height="1072">
+  </picture>
+  <div class="splash-veil"></div>
+  <div class="splash-bar" aria-hidden="true"></div>
+</div>
+<script>(function(){
+  var el=document.getElementById("splash"),img=document.getElementById("splashImg"),root=document.documentElement,done=false;
+  if(!el||root.classList.contains("splash-seen")){return}
+  function start(){el.classList.add("go")}
+  function finish(){if(done)return;done=true;try{sessionStorage.setItem("florique-splash","1")}catch(e){}
+    el.classList.add("leaving");setTimeout(function(){root.classList.remove("splash-on");el.remove()},650)}
+  if(img.complete&&img.naturalWidth){start()}else{img.addEventListener("load",start);img.addEventListener("error",start)}
+  setTimeout(start,2500);                                   // never wait on a slow image
+  var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  setTimeout(finish,reduce?1800:3600);                       // auto-enter
+  el.addEventListener("click",finish);
+  addEventListener("keydown",function(e){if(e.key==="Enter"||e.key==="Escape"||e.key===" ")finish()});
+})();</script>
+
 <div class="site">
 <div class="frame" aria-hidden="true"><i class="f-l"></i><i class="f-r"></i><i class="f-tl"></i><i class="f-tc"></i><i class="f-tr"></i><i class="f-bl"></i><i class="f-bc"></i><i class="f-br"></i></div>
 <header class="site-header">

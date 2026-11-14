@@ -349,3 +349,35 @@ h1, h2, h3 { margin: 0; font-family: var(--font-display); font-weight: 500; lett
 .legal-links { display: flex; flex-wrap: wrap; gap: 6px 22px; }
 .legal-links a { color: var(--muted); text-decoration: none; }
 .legal-links a:hover { color: var(--brand); text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 3px; }
+
+/* ---------- Welcome splash (home page, once per visit) ---------- */
+.splash { position: fixed; inset: 0; z-index: 200; background: #f3ead7; overflow: hidden; cursor: pointer; }
+.splash-bg, .splash-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
+.splash-bg { display: none; filter: blur(22px) saturate(1.05); transform: scale(1.12); }
+.splash.go .splash-img, .splash.go .splash-bg { animation: splash-in .9s ease .1s forwards, splash-zoom 4.2s cubic-bezier(.22,.6,.3,1) forwards; }
+.splash-bar { position: absolute; left: 50%; bottom: clamp(28px, 6vh, 56px); width: min(220px, 50vw); height: 2px; margin-left: calc(min(220px, 50vw) / -2);
+  background: rgba(255,255,255,.45); border-radius: 2px; overflow: hidden; }
+.splash-bar::after { content: ""; display: block; height: 100%; width: 100%; background: var(--gold); transform: scaleX(0); transform-origin: left; }
+.splash.go .splash-bar::after { animation: splash-load 3s cubic-bezier(.4,.1,.3,1) .3s forwards; }
+.splash-veil { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 55%, rgba(16,38,26,.22)); pointer-events: none; }
+@keyframes splash-in { to { opacity: 1; } }
+@keyframes splash-zoom { from { transform: scale(1); } to { transform: scale(1.06); } }
+@keyframes splash-load { to { transform: scaleX(1); } }
+@keyframes splash-out { to { opacity: 0; visibility: hidden; } }
+.splash.leaving { animation: splash-out .6s ease forwards; }
+html.splash-on, html.splash-on body { overflow: hidden; }
+html.splash-seen .splash { display: none; }
+@media (orientation: portrait) {
+  .splash-bg { display: block; }
+  .splash-bg, .splash-img { object-fit: cover; }
+  .splash-img { inset: auto 0; top: 50%; height: auto; transform: translateY(-50%); object-fit: contain;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+            mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent); }
+  .splash.go .splash-img { animation: splash-in .9s ease .1s forwards; }
+  .splash.go .splash-bg { animation: splash-in .9s ease .1s forwards, splash-zoom 4.2s ease forwards; }
+}
+@media (prefers-reduced-motion: reduce) {
+  
+  .splash.go .splash-img, .splash.go .splash-bg { animation: splash-in .3s ease forwards; }
+  .splash.go .splash-bar::after { animation: none; transform: scaleX(1); }
+}
