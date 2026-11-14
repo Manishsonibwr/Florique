@@ -94,6 +94,8 @@ app.use((req, res, next) => {
   }
   next();
 });
+// Images never change under the same name, so let browsers keep them for a week (faster repeat visits)
+app.use('/img', express.static(path.join(__dirname, 'public', 'img'), { maxAge: '7d' }));
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
 // Session configuration
