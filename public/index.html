@@ -101,6 +101,24 @@
   </section>
 </main>
 
+<dialog class="pdlg" id="pdlg" aria-labelledby="pdName">
+  <button class="pdlg-x" type="button" id="pdClose" aria-label="Close details"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <div class="pdlg-grid">
+    <div class="pdlg-img" id="pdImg"></div>
+    <div class="pdlg-body">
+      <h2 id="pdName"></h2>
+      <p class="pdlg-price" id="pdPrice"></p>
+      <p class="pdlg-long" id="pdLong"></p>
+      <h4>What is included</h4>
+      <ul class="pdlg-list" id="pdIncludes"></ul>
+      <dl class="pdlg-facts" id="pdFacts"></dl>
+      <h4>Keeping it fresh</h4>
+      <p class="pdlg-care" id="pdCare"></p>
+      <button class="btn btn-primary pdlg-add" type="button" id="pdAdd">Add to cart</button>
+    </div>
+  </div>
+</dialog>
+
 <div class="overlay" id="overlay"></div>
 <aside class="cart" id="cart" aria-label="Shopping cart">
   <div class="cart-head">
@@ -148,12 +166,31 @@
   // ---------- Product data ----------
   const PRODUCTS = [
     { id: 1, name: "Blush Rose Bouquet", image: "https://i.ibb.co/cSYqFS4x/Blush-Rose-Bouquet.jpg",     price: 899,  desc: "Twelve soft pink roses wrapped in kraft paper.",         petal: "#f4a6bb", center: "#f2c14e", bg: "#fde6ec", petals: 8,  ribbon: "#c8326b" },
-    { id: 2, name: "Sunny Gerbera Mix", image: "https://i.ibb.co/j92114Vd/Sunny-Gerbera-Mix.jpg",      price: 10,  desc: "Cheerful yellow and orange gerberas with fresh greens.", petal: "#f6b73c", center: "#7a4a1d", bg: "#fff1cf", petals: 12, ribbon: "#2e5e46" },
+    { id: 2, name: "Sunny Gerbera Mix", image: "https://i.ibb.co/j92114Vd/Sunny-Gerbera-Mix.jpg",      price: 649,  desc: "Cheerful yellow and orange gerberas with fresh greens.", petal: "#f6b73c", center: "#7a4a1d", bg: "#fff1cf", petals: 12, ribbon: "#2e5e46" },
     { id: 3, name: "White Lily Elegance", image: "https://i.ibb.co/0RCJ03Gx/White-Lily-Elegance.jpg",    price: 1199, desc: "Fragrant white lilies finished with eucalyptus leaves.", petal: "#ffffff", center: "#e8b64c", bg: "#e3efe5", petals: 6,  ribbon: "#b98a2e" },
     { id: 4, name: "Lavender Meadow", image: "https://i.ibb.co/xKjxLmRK/Lavender-Meadow.jpg",        price: 749,  desc: "Calming lavender stems tied with a soft ribbon.",        petal: "#b9a3dd", center: "#f2e7a8", bg: "#ece6f7", petals: 7,  ribbon: "#6d4fa3" },
     { id: 5, name: "Pink Peony Dream", image: "https://i.ibb.co/tTqz3rFY/Pink-Peony-Dream.jpg",       price: 1499, desc: "Full, ruffled peonies in blush and rose tones.",         petal: "#ee8fab", center: "#fbd86b", bg: "#fbdde6", petals: 10, ribbon: "#a32457" },
     { id: 6, name: "Marigold Festive Bunch", image: "https://i.ibb.co/DPy1qmp7/Marigold-Festive-Bunch.jpg", price: 499,  desc: "Bright marigolds, ideal for festivals and pooja.",       petal: "#f39a1e", center: "#c2570c", bg: "#fde8c8", petals: 14, ribbon: "#c8326b" }
   ];
+
+
+  // ---------- Detailed descriptions (shown in the "View details" card) ----------
+  // Edit the wording here any time: one entry per product id.
+  const CARE = "Trim 2 cm off the stems at an angle, use a clean vase with fresh water, and change the water every two days. Keep away from direct sun and ripening fruit.";
+  const DETAILS = {
+    1: { long: "A classic way to say thank you, happy anniversary or I love you. Twelve soft pink roses are hand-tied by our florists and wrapped in kraft paper with a ribbon.",
+         includes: ["12 blush pink roses", "Fresh green filler", "Kraft paper wrap and ribbon"], goodFor: "Anniversaries, birthdays, thank-you gifts", size: "About 40 cm tall" },
+    2: { long: "A sunny bunch to brighten a desk, a hospital room or a birthday table. Yellow and orange gerberas are paired with fresh greens for a cheerful, informal look.",
+         includes: ["Yellow and orange gerberas", "Fresh green foliage", "Kraft paper wrap and ribbon"], goodFor: "Birthdays, get-well wishes, congratulations", size: "About 35 cm tall" },
+    3: { long: "Tall, elegant and fragrant. White lilies are finished with eucalyptus leaves for a calm, refined bouquet that suits both celebrations and sympathy.",
+         includes: ["White lilies", "Eucalyptus leaves", "Paper wrap and gold-toned ribbon"], goodFor: "Weddings, housewarmings, sympathy", size: "About 50 cm tall" },
+    4: { long: "Soft purple lavender stems tied with a ribbon. A calming bouquet that looks lovely on a bedside table or a windowsill.",
+         includes: ["Lavender stems", "Soft ribbon tie"], goodFor: "Thank-you gifts, self-care, home decor", size: "About 35 cm tall" },
+    5: { long: "Full, ruffled peonies in blush and rose tones. Our most luxurious bouquet, made for moments that call for something special.",
+         includes: ["Peonies in blush and rose shades", "Fresh green foliage", "Paper wrap and ribbon"], goodFor: "Weddings, anniversaries, special surprises", size: "About 40 cm tall" },
+    6: { long: "Bright, long-lasting marigolds for festivals, pooja and decoration. A generous bunch in warm orange and yellow.",
+         includes: ["Fresh marigold blooms", "Simple tie"], goodFor: "Festivals, pooja, home and event decoration", size: "Generous bunch" }
+  };
 
   // ---------- Formatting ----------
   const rupees = n => "₹" + n.toLocaleString("en-IN");
@@ -274,13 +311,16 @@
   const grid = document.getElementById("productGrid");
   grid.innerHTML = PRODUCTS.map(p => `
     <article class="card">
-      <div class="img" style="--tile:${p.bg}">${p.image
+      <div class="img" style="--tile:${p.bg}" data-view="${p.id}">${p.image
           ? `<img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" data-id="${p.id}" style="display:block;width:100%;height:100%;aspect-ratio:1/1;object-fit:cover">`
           : bloomSVG(p)}</div>
       <div class="body">
         <div class="top"><h3>${esc(p.name)}</h3><span class="price">${rupees(p.price)}</span></div>
         <p class="desc">${esc(p.desc)}</p>
-        <button class="add-btn" data-id="${p.id}">Add to cart</button>
+        <div class="card-actions">
+          <button class="view-btn" type="button" data-id="${p.id}" aria-haspopup="dialog">View details</button>
+          <button class="add-btn" data-id="${p.id}">Add to cart</button>
+        </div>
       </div>
     </article>
   `).join("");
@@ -301,6 +341,45 @@
     btn.classList.add("added");
     setTimeout(() => { btn.textContent = "Add to cart"; btn.classList.remove("added"); }, 900);
   });
+
+  // ---------- Product details card ----------
+  const pdlg = document.getElementById("pdlg");
+  const pdAdd = document.getElementById("pdAdd");
+  let pdId = null;
+  function openDetails(id) {
+    const p = PRODUCTS.find(x => x.id === id), d = DETAILS[id] || {};
+    if (!p) return;
+    pdId = id;
+    const img = document.getElementById("pdImg");
+    img.style.setProperty("--tile", p.bg);
+    img.innerHTML = p.image ? `<img src="${esc(p.image)}" alt="${esc(p.name)}">` : bloomSVG(p);
+    const im = img.querySelector("img");
+    if (im) im.addEventListener("error", () => { img.innerHTML = bloomSVG(p); });
+    document.getElementById("pdName").textContent = p.name;
+    document.getElementById("pdPrice").textContent = rupees(p.price);
+    document.getElementById("pdLong").textContent = d.long || p.desc;
+    document.getElementById("pdIncludes").innerHTML = (d.includes || []).map(x => `<li>${esc(x)}</li>`).join("");
+    document.getElementById("pdFacts").innerHTML = [["Best for", d.goodFor], ["Size", d.size], ["Delivery", "Hand-arranged fresh and delivered to your door. Pick the date and time at checkout."]]
+      .filter(r => r[1]).map(r => `<div><dt>${r[0]}</dt><dd>${esc(r[1])}</dd></div>`).join("");
+    document.getElementById("pdCare").textContent = d.care || CARE;
+    pdAdd.textContent = "Add to cart · " + rupees(p.price);
+    pdAdd.classList.remove("added");
+    pdlg.scrollTop = 0;
+    pdlg.showModal();
+  }
+  grid.addEventListener("click", e => {
+    const v = e.target.closest(".view-btn, [data-view]");
+    if (v) openDetails(Number(v.dataset.id || v.dataset.view));
+  });
+  pdAdd.addEventListener("click", () => {
+    if (pdId == null) return;
+    addToCart(pdId);
+    pdAdd.textContent = "Added ✓";
+    pdAdd.classList.add("added");
+    setTimeout(() => pdlg.close(), 700);
+  });
+  document.getElementById("pdClose").addEventListener("click", () => pdlg.close());
+  pdlg.addEventListener("click", e => { if (e.target === pdlg) pdlg.close(); });   // click on the dim backdrop
 
   // ---------- Cart logic ----------
   function addToCart(id) {
