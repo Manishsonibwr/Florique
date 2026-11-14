@@ -86,7 +86,15 @@ app.post('/api/payment/webhook', express.raw({ type: '*/*', limit: '1mb' }), (re
 
 // Middleware
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+// Clean URLs: /contact instead of /contact.html (old .html links redirect permanently)
+app.use((req, res, next) => {
+  if ((req.method === 'GET' || req.method === 'HEAD') && req.path.endsWith('.html')) {
+    const clean = req.path === '/index.html' ? '/' : req.path.slice(0, -5);
+    return res.redirect(301, clean + req.url.slice(req.path.length));
+  }
+  next();
+});
+app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
 // Session configuration
 app.use(

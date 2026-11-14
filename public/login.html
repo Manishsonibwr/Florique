@@ -16,8 +16,8 @@
 <div class="site">
 <div class="frame" aria-hidden="true"><i class="f-l"></i><i class="f-r"></i><i class="f-tl"></i><i class="f-tc"></i><i class="f-tr"></i><i class="f-bl"></i><i class="f-bc"></i><i class="f-br"></i></div>
 <header class="site-header">
-  <a class="brand" href="index.html" aria-label="The Florique – home"><img src="img/logo.webp" alt="The Florique" width="700" height="337"></a>
-  <div class="header-actions"><a class="back-link" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Back to shop</a></div>
+  <a class="brand" href="/" aria-label="The Florique – home"><img src="img/logo.webp" alt="The Florique" width="700" height="337"></a>
+  <div class="header-actions"><a class="back-link" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Back to shop</a></div>
 </header>
 
 <main class="auth">
@@ -73,22 +73,22 @@
   <div class="wrap">
   <div class="footer-inner">
     <div>
-      <a class="footer-brand" href="index.html" aria-label="The Florique – home"><img src="img/logo.webp" alt="The Florique" width="700" height="337"></a>
+      <a class="footer-brand" href="/" aria-label="The Florique – home"><img src="img/logo.webp" alt="The Florique" width="700" height="337"></a>
       <p>Fresh flowers, delivered across Delhi NCR.</p>
     </div>
     <nav class="footer-links" aria-label="Footer">
-      <a href="index.html">Shop</a>
-      <a href="orders.html">My orders</a>
-      <a href="login.html">Login</a>
-      <a href="contact.html">Contact us</a>
+      <a href="/">Shop</a>
+      <a href="orders">My orders</a>
+      <a href="login">Login</a>
+      <a href="contact">Contact us</a>
     </nav>
   </div>
   <div class="footer-base">
     <nav class="legal-links" aria-label="Policies">
-      <a href="terms.html">Terms and conditions</a>
-      <a href="privacy.html">Privacy policy</a>
-      <a href="refund.html">Refund and cancellation</a>
-      <a href="shipping.html">Delivery policy</a>
+      <a href="terms">Terms and conditions</a>
+      <a href="privacy">Privacy policy</a>
+      <a href="refund">Refund and cancellation</a>
+      <a href="shipping">Delivery policy</a>
     </nav>
     <span>© The Florique</span>
   </div>
@@ -98,10 +98,10 @@
 </div>
 <script src="cart.js"></script>
 <script>
-  // Where to go after login (only local *.html pages, e.g. ?next=checkout.html)
+  // Where to go after login (only local pages, e.g. ?next=checkout)
   function afterLoginUrl() {
     const n = new URLSearchParams(window.location.search).get("next");
-    return /^[a-z0-9_-]+\.html$/i.test(n || "") ? n : "index.html";
+    return /^[a-z0-9_-]+(\.html)?$/i.test(n || "") ? n.replace(/\.html$/i, "") : "/";
   }
 
   // Header cart count (no-op if #cartCount isn't on this page)
